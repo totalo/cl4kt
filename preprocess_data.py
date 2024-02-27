@@ -11,13 +11,12 @@ import os
 import pickle
 import time
 
-
 # Please specify your dataset Path
 BASE_PATH = "./dataset"
 
 
 def prepare_assistments(
-    data_name: str, min_user_inter_num: int, remove_nan_skills: bool
+        data_name: str, min_user_inter_num: int, remove_nan_skills: bool
 ):
     """
     Preprocess ASSISTments dataset
@@ -25,13 +24,13 @@ def prepare_assistments(
         :param data_name: (str) "assistments09", "assistments12", "assisments15", and "assistments17"
         :param min_user_inter_num: (int) Users whose number of interactions is less than min_user_inter_num will be removed
         :param remove_nan_skills: (bool) if True, remove interactions with no skill tage
-        :param train_split: (float) proportion of data to use for training
+        :param train_split: (float) proportion of dataset to use for training
         
         :output df: (pd.DataFrame) preprocssed ASSISTments dataset with user_id, item_id, timestamp, correct and unique skill features
         :output question_skill_rel: (csr_matrix) corresponding question-skill relationship matrix
     """
     data_path = os.path.join(BASE_PATH, data_name)
-    df = pd.read_csv(os.path.join(data_path, "data.csv"), encoding="ISO-8859-1")
+    df = pd.read_csv(os.path.join(data_path, "dataset.csv"), encoding="ISO-8859-1")
 
     # Only 2012 and 2017 versions have timestamps
     if data_name == "assistments09":
@@ -39,7 +38,7 @@ def prepare_assistments(
         df = df.rename(columns={"problem_id": "item_id"})
         df["timestamp"] = np.zeros(len(df), dtype=np.int64)
     elif data_name == "assistments12":
-        # df = pd.read_csv(os.path.join(data_path, "2012-2013-data-with-predictions-4-final.csv"), encoding="ISO-8859-1")
+        # df = pd.read_csv(os.path.join(data_path, "2012-2013-dataset-with-predictions-4-final.csv"), encoding="ISO-8859-1")
         df = df.rename(columns={"problem_id": "item_id"})
         df["timestamp"] = pd.to_datetime(df["start_time"])
         df["timestamp"] = df["timestamp"] - df["timestamp"].min()
@@ -101,7 +100,7 @@ def prepare_assistments(
     df["skill_id"] = unique_skill_ids[df["item_id"]]
 
     print("# Preprocessed Skills: {}".format(df["skill_id"].nunique()))
-    # Sort data temporally
+    # Sort dataset temporally
     if data_name in ["assistments12", "assistments17"]:
         df.sort_values(by="timestamp", inplace=True)
     elif data_name == "assistments09":
@@ -109,14 +108,14 @@ def prepare_assistments(
     elif data_name == "assistments15":
         df.sort_values(by="log_id", inplace=True)
 
-    # Sort data by users, preserving temporal order for each user
+    # Sort dataset by users, preserving temporal order for each user
     df = pd.concat([u_df for _, u_df in df.groupby("user_id")])
     df.to_csv(os.path.join(data_path, "original_df.csv"), sep="\t", index=False)
 
     df = df[["user_id", "item_id", "timestamp", "correct", "skill_id"]]
     df.reset_index(inplace=True, drop=True)
 
-    # Save data
+    # Save dataset
     with open(os.path.join(data_path, "question_skill_rel.pkl"), "wb") as f:
         pickle.dump(csr_matrix(Q_mat), f)
 
@@ -125,7 +124,7 @@ def prepare_assistments(
 
 
 def prepare_kddcup10(
-    data_name: str, min_user_inter_num: int, kc_col_name: str, remove_nan_skills: bool
+        data_name: str, min_user_inter_num: int, kc_col_name: str, remove_nan_skills: bool
 ):
     """
     Preprocess KDD Cup 2010 dataset
@@ -134,13 +133,13 @@ def prepare_kddcup10(
         :param min_user_inter_num: (int) Users whose number of interactions is less than min_user_inter_num will be removed
         :param kc_col_name: (str) Skills id column
         :param remove_nan_skills: (bool) if True, remove interactions with no skill tage
-        :param train_split: (float) proportion of data to use for training
+        :param train_split: (float) proportion of dataset to use for training
 
         :output df: (pd.DataFrame) preprocssed ASSISTments dataset with user_id, item_id, timestamp, correct and unique skill features
         :output question_skill_rel: (csr_matrix) corresponding question-skill relationship matrix
     """
     data_path = os.path.join(BASE_PATH, data_name)
-    df = pd.read_csv(os.path.join(data_path, "data.txt"), delimiter="\t")
+    df = pd.read_csv(os.path.join(data_path, "dataset.txt"), delimiter="\t")
     df = df.rename(
         columns={"Anon Student Id": "user_id", "Correct First Attempt": "correct"}
     )
@@ -199,17 +198,17 @@ def prepare_kddcup10(
 
     print("# Preprocessed Skills: {}".format(df["skill_id"].nunique()))
 
-    # Sort data temporally
+    # Sort dataset temporally
     df.sort_values(by="timestamp", inplace=True)
 
-    # Sort data by users, preserving temporal order for each user
+    # Sort dataset by users, preserving temporal order for each user
     df = pd.concat([u_df for _, u_df in df.groupby("user_id")])
     df.to_csv(os.path.join(data_path, "original_df.csv"), sep="\t", index=False)
 
     df = df[["user_id", "item_id", "timestamp", "correct", "skill_id"]]
     df.reset_index(inplace=True, drop=True)
 
-    # Save data
+    # Save dataset
     with open(os.path.join(data_path, "question_skill_rel.pkl"), "wb") as f:
         pickle.dump(csr_matrix(Q_mat), f)
 
@@ -241,7 +240,7 @@ def prepare_statics():
 def prepare_spanish():
     """
     Preprocess Spanish dataset.
-    :param train_split: (float) proportion of data to use for training
+    :param train_split: (float) proportion of dataset to use for training
     :output df: (pd.DataFrame) preprocessed dataset with user_id, item_id, timestamp, correct and unique skill features
     :output question_skill_rel: (csr_matrix) question-skill relationship sparse matrix
     """
@@ -268,10 +267,10 @@ def prepare_spanish():
     for item_id, skill_id in df[["item_id", "skill_id"]].values:
         Q_mat[item_id, skill_id] = 1
 
-    # Sort data by users, preserving temporal order for each user
+    # Sort dataset by users, preserving temporal order for each user
     df = pd.concat([u_df for _, u_df in df.groupby("user_id")])
 
-    # Save data
+    # Save dataset
     with open(os.path.join(data_path, "question_skill_rel.pkl"), "wb") as f:
         pickle.dump(csr_matrix(Q_mat), f)
 
@@ -289,7 +288,7 @@ def prepare_slepemapy(min_user_inter_num):
     data_df_cz = pd.read_csv(os.path.join(data_path, "answer.csv"), sep=";")
 
     # 1. place_answered is NaN
-    print("raw data:", len(data_df_cz))
+    print("raw dataset:", len(data_df_cz))
     filter_df_cz = data_df_cz[~data_df_cz["place_answered"].isna()]
     print("drop nan:", len(filter_df_cz))
 
@@ -369,7 +368,7 @@ def prepare_sampled_slepemapy(min_user_inter_num):
     data_df_cz = pd.read_csv(os.path.join(data_path, "answer.csv"), sep=";")
 
     # 1. place_answered is NaN
-    print("raw data:", len(data_df_cz))
+    print("raw dataset:", len(data_df_cz))
     filter_df_cz = data_df_cz[~data_df_cz["place_answered"].isna()]
     print("drop nan:", len(filter_df_cz))
 
@@ -442,43 +441,49 @@ def prepare_sampled_slepemapy(min_user_inter_num):
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description="Preprocess DKT datasets")
-    parser.add_argument("--data_name", type=str, default="assistments09")
-    parser.add_argument("--min_user_inter_num", type=int, default=5)
-    parser.add_argument("--remove_nan_skills", default=True, action="store_true")
-    args = parser.parse_args()
-
-    if args.data_name in [
-        "assistments09",
-        "assistments12",
-        "assistments15",
-        "assistments17",
-    ]:
-        prepare_assistments(
-            data_name=args.data_name,
-            min_user_inter_num=args.min_user_inter_num,
-            remove_nan_skills=args.remove_nan_skills,
-        )
-    elif args.data_name == "bridge_algebra06":
-        prepare_kddcup10(
-            data_name="bridge_algebra06",
-            min_user_inter_num=args.min_user_inter_num,
-            kc_col_name="KC(SubSkills)",
-            remove_nan_skills=args.remove_nan_skills,
-        )
-    elif args.data_name == "algebra05":
-        prepare_kddcup10(
-            data_name="algebra05",
-            min_user_inter_num=args.min_user_inter_num,
-            kc_col_name="KC(Default)",
-            remove_nan_skills=args.remove_nan_skills,
-        )
-    elif args.data_name == "spanish":
-        prepare_spanish()
-    elif args.data_name == "slepemapy":
-        prepare_slepemapy(args.min_user_inter_num)
-    elif args.data_name == "sampled_slepemapy":
-        prepare_sampled_slepemapy(args.min_user_inter_num)
-    elif args.data_name == "statics":
-        prepare_statics()
-
+    prepare_kddcup10(
+        data_name="algebra05",
+        min_user_inter_num=1,
+        kc_col_name="KC(Default)",
+        remove_nan_skills=1,
+    )
+    # parser = ArgumentParser(description="Preprocess DKT datasets")
+    # parser.add_argument("--data_name", type=str, default="assistments09")
+    # parser.add_argument("--min_user_inter_num", type=int, default=5)
+    # parser.add_argument("--remove_nan_skills", default=True, action="store_true")
+    # args = parser.parse_args()
+    #
+    # if args.data_name in [
+    #     "assistments09",
+    #     "assistments12",
+    #     "assistments15",
+    #     "assistments17",
+    # ]:
+    #     prepare_assistments(
+    #         data_name=args.data_name,
+    #         min_user_inter_num=args.min_user_inter_num,
+    #         remove_nan_skills=args.remove_nan_skills,
+    #     )
+    # elif args.data_name == "bridge_algebra06":
+    #     prepare_kddcup10(
+    #         data_name="bridge_algebra06",
+    #         min_user_inter_num=args.min_user_inter_num,
+    #         kc_col_name="KC(SubSkills)",
+    #         remove_nan_skills=args.remove_nan_skills,
+    #     )
+    # elif args.data_name == "algebra05":
+    #     prepare_kddcup10(
+    #         data_name="algebra05",
+    #         min_user_inter_num=args.min_user_inter_num,
+    #         kc_col_name="KC(Default)",
+    #         remove_nan_skills=args.remove_nan_skills,
+    #     )
+    # elif args.data_name == "spanish":
+    #     prepare_spanish()
+    # elif args.data_name == "slepemapy":
+    #     prepare_slepemapy(args.min_user_inter_num)
+    # elif args.data_name == "sampled_slepemapy":
+    #     prepare_sampled_slepemapy(args.min_user_inter_num)
+    # elif args.data_name == "statics":
+    #     prepare_statics()
+    #

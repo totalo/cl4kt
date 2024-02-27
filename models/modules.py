@@ -92,7 +92,7 @@ class CL4KTTransformerLayer(Module):
 
         row: target, col: source
         """
-        device = query.get_device()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         nopeek_mask = np.triu(np.ones((1, 1, seqlen, seqlen)), k=mask).astype("uint8")
 
         src_mask = (torch.from_numpy(nopeek_mask) == 0).to(device)
@@ -375,9 +375,12 @@ def individual_attention(q, k, v, d_k, mask, dropout, gamma=None):
 
         disttotal_scores = torch.sum(scores_, dim=-1, keepdim=True)
 
-        device = distcum_scores.get_device()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         position_effect = torch.abs(x1 - x2)[None, None, :, :].type(torch.FloatTensor)
-        position_effect = position_effect.to(device)
+        if torch.cuda.is_available():
+            position_effect = position_effect.to(device)
+        else:
+            position_effect = position_effect
 
         dist_scores = torch.clamp(
             (disttotal_scores - distcum_scores) * position_effect, min=0.0
